@@ -4,6 +4,7 @@ import threading
 from ultralytics import YOLO
 import os
 import time
+import socket
 
 os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;udp|max_delay;0|fflags;nobuffer|flags;low_delay"
 
@@ -63,17 +64,29 @@ class VideoCaptureAsync:
         if self.cap is not None:
             self.cap.release()
 
-# -------------------------------
-# Main
-# -------------------------------
 
-# Load YOLO
+# -------------------------------
+# UDP setup for ESP32 control
+# -------------------------------
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+ESP_ADDR = (config.ESP_IP, config.ESP_PORT)
+
+def send_motor_command(throttle, steering):
+    """Send throttle and steering values to ESP32 via UDP"""
+    message = f"{throttle},{steering}"
+    try:
+        sock.sendto(message.encode(), ESP_ADDR)
+    except Exception as e:
+        print(f"Error sending UDP message: {e}")
+
+
+# -------------------------------
+# Main YOLO + autonomous control
+# -------------------------------
 MODEL_PATH = os.path.join("..", "models", config.MODEL)
 model = YOLO(MODEL_PATH)
 
 rtsp_url = f"rtsp://{config.JOSHPI_IP}:{config.JOSHPI_PORT}/cam"
-
-# Start threaded capture
 cap = VideoCaptureAsync(rtsp_url)
 
 frame_count = 0
@@ -89,7 +102,7 @@ while True:
 
     frame_height, frame_width = frame.shape[:2]
 
-    # Only run inference every 3 frames
+    # Run inference every 3 frames
     if frame_count % 3 == 0:
         results = model(
             frame,
@@ -105,27 +118,50 @@ while True:
             if conf < 0.5:
                 continue
             cls = int(box.cls[0])
-            class_name = model.names[cls]
-            if class_name != "bottle":
+            if model.names[cls] != "bottle":
                 continue
 
             x1, y1, x2, y2 = map(int, box.xyxy[0])
             boxes.append((x1, y1, x2, y2))
-            label = f"{model.names[cls]} {conf:.2f}"
 
-        # Update last_boxes only if we detected something
         if boxes:
             last_boxes = boxes
             last_detect_time = time.time()
+
+            # --- Compute motor commands ---
+            # Take the largest box (closest bottle)
+            largest_box = max(boxes, key=lambda b: (b[2]-b[0])*(b[3]-b[1]))
+            box_x_center = (largest_box[0] + largest_box[2]) // 2
+            box_width = largest_box[2] - largest_box[0]
+
+            # Steering: center of box relative to frame center
+            steering = (box_x_center - frame_width//2) / (frame_width//2)
+            steering = max(-1, min(1, steering))  # clamp to [-1, 1]
             
+            '''
+            # Throttle: larger box means closer -> slower
+            throttle = 1 - (box_width / frame_width)
+            throttle = max(0, min(1, throttle))  # clamp to [0,1]
+
+            # Convert to PWM scale (0-255)
+            throttle_pwm = int(throttle * 255)
+            '''
+            throttle_pwm = int(config.AUTONOMOUS_SPEED)
+            steering_pwm = int(steering * 255)
+        
+
+            send_motor_command(throttle_pwm, steering_pwm)
+            print((throttle_pwm, steering_pwm))
+
+    # Timeout: stop if no detection for a while
     if time.time() - last_detect_time > timeout:
         last_boxes = []
+        send_motor_command(0, 0)  # stop motors
+        print((0, 0))
 
-    # Draw last detected boxes on every frame
+    # Draw boxes
     for x1, y1, x2, y2 in last_boxes:
         cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.putText(frame, label, (x1, max(y1 - 5, 0)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
     cv2.imshow("YOLO RTSP Stream", frame)
     if cv2.waitKey(1) & 0xFF == ord("q"):
