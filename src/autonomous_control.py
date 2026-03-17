@@ -1,6 +1,5 @@
 import config
 import cv2
-import threading
 from ultralytics import YOLO
 import os
 import time
@@ -30,19 +29,15 @@ model = YOLO(MODEL_PATH)
 
 rtsp_url = "rtsp://"+config.JOSHPI_IP+":"+config.JOSHPI_PORT+"/cam"
 
-frame_count = 0
-last_boxes = []
 last_detect_time = 0
-timeout = 0.1
-class_id = 39
 
-frame_height, frame_width = (640, 480)
+frame_height, frame_width = config.JOSHPI_DISPLAY_SIZE
 
 for result in model.track(
 source=rtsp_url,
 stream=True,
-conf=0.5,
-classes=[class_id],
+conf=config.CONFIDENCE,
+classes=[config.CLASS_ID],
 device=config.DEVICE,
 imgsz=config.YOLO_INPUT_SIZE,
 half=True,
@@ -80,8 +75,8 @@ persist=True):
         print((throttle_pwm, steering_pwm))
 
     # Timeout: stop if no detection for a while
-    elif time.time() - last_detect_time > timeout:
-        send_motor_command(0, 0)  # stop motors
+    elif time.time() - last_detect_time > config.TIMEOUT:
+        send_motor_command(0, 0)
         print((0, 0))
 
     annotated_frame = result.plot() 
