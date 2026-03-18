@@ -2,7 +2,7 @@
 DEADZONE = 10
 THROTTLE_AXIS = 3
 STEERING_AXIS = 2
-ESP_IP = "192.168.137.27"
+ESP_IP = "192.168.137.71"
 ESP_PORT = 4210
 
 # Video Capture Settings
@@ -16,8 +16,8 @@ MODEL = "yolov8m.pt"
 DEVICE = "cuda"
 AUTONOMOUS_THROTTLE_SPEED = 150 # 0-255
 AUTONOMOUS_STEERING_SPEED = 50 # 0-255
-CLASS_IDS = [0, 39, 67] # YOLO classes: person, bottle, cellphone
+CLASS_IDS = [0] # YOLO classes: person
 TIMEOUT = 0.1
 CONFIDENCE = 0.5
 SLEEP_TIME = 0.05
-DECAY = 0.9
+DECAY = 0.8
