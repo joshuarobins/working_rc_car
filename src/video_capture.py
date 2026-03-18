@@ -1,5 +1,8 @@
 import config
 import cv2
+import os
+
+os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp|max_delay;0|fflags;nobuffer|flags;low_delay"
 
 rtsp_url = "rtsp://"+config.JOSHPI_IP+":"+config.JOSHPI_PORT+"/cam"
 

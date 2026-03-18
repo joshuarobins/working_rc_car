@@ -13,11 +13,13 @@ os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;udp|max_delay;0|ff
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 ESP_ADDR = (config.ESP_IP, config.ESP_PORT)
 
-def send_motor_command(throttle, steering, sleep=True):
+def send_motor_command(throttle, steering, sleep=True, do_print=True):
     """Send throttle and steering values to ESP32 via UDP"""
     message = f"{throttle},{steering}"
     try:
         sock.sendto(message.encode(), ESP_ADDR)
+        if do_print:
+            print((throttle, steering))
         if sleep:
             time.sleep(config.SLEEP_TIME)
     except Exception as e:
@@ -64,17 +66,27 @@ persist=True):
         x1, y1, x2, y2 = largest.astype(int) 
         box_x_center = (x1 + x2) // 2
 
+        '''
         if box_x_center > frame_width//2:
             steering = config.AUTONOMOUS_STEERING_SPEED
         elif box_x_center < frame_width//2:
             steering = -config.AUTONOMOUS_STEERING_SPEED
         else:
             steering = 0
+        '''
+        
+        steering = (box_x_center - frame_width//2) / (frame_width//2)
+        steering = max(-1, min(1, steering))
+
+        raw_steering = steering * config.AUTONOMOUS_STEERING_SPEED
+        raw_throttle = config.AUTONOMOUS_THROTTLE_SPEED
+
+        smoothed_steering = raw_steering
+        smoothed_throttle = raw_throttle
+
+        send_motor_command(int(smoothed_throttle), int(smoothed_steering))
         
         '''
-        steering = (box_x_center - frame_width//2) / (frame_width//2)
-        steering = -max(-1, min(1, steering))
-        
         # Throttle: larger box means closer -> slower
         throttle = 1 - (box_width / frame_width)
         throttle = max(0, min(1, throttle))  # clamp to [0,1]
@@ -82,12 +94,6 @@ persist=True):
         # Convert to PWM scale (0-255)
         throttle_pwm = int(throttle * 255)
         '''
-        throttle_pwm = int(config.AUTONOMOUS_THROTTLE_SPEED)
-        steering_pwm = int(steering)
-    
-        
-        send_motor_command(throttle_pwm, steering_pwm)
-        print((throttle_pwm, steering_pwm))
         
     # Timeout: stop if no detection for a while
     elif time.time() - last_detect_time > config.TIMEOUT:
@@ -105,7 +111,7 @@ persist=True):
     annotated_frame = result.plot() 
     cv2.imshow("YOLO RTSP Stream", annotated_frame)
     if cv2.waitKey(1) & 0xFF == ord("q"):
-        send_motor_command(0, 0)
+        send_motor_command(0, 0, do_print=False)
         break
 
 cv2.destroyAllWindows()

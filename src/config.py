@@ -2,7 +2,7 @@
 DEADZONE = 10
 THROTTLE_AXIS = 3
 STEERING_AXIS = 2
-ESP_IP = "192.168.137.197"
+ESP_IP = "192.168.137.89"
 ESP_PORT = 4210
 
 # Video Capture Settings
@@ -12,7 +12,7 @@ JOSHPI_PORT = "8554"
 
 # Autonomous Control settings
 YOLO_INPUT_SIZE = 320 #expects multiple of 32
-MODEL = "yolov8n.pt"
+MODEL = "yolov8l.pt"
 DEVICE = "cuda"
 AUTONOMOUS_THROTTLE_SPEED = 150 # 0-255
 AUTONOMOUS_STEERING_SPEED = 50 # 0-255
