@@ -13,13 +13,12 @@ cv2.setNumThreads(1)
 # UDP setup for ESP32 control
 # -------------------------------
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-ESP_ADDR = (config.ESP_IP, config.ESP_PORT)
 
 def send_motor_command(throttle, steering, sleep=False, do_print=True):
     """Send throttle and steering values to ESP32 via UDP"""
     message = f"{throttle},{steering}"
     try:
-        sock.sendto(message.encode(), ESP_ADDR)
+        sock.sendto(message.encode(), (config.ESP_IP, config.ESP_PORT))
         if do_print:
             print((throttle, steering))
         if sleep:
