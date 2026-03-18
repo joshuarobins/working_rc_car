@@ -2,21 +2,21 @@
 DEADZONE = 10
 THROTTLE_AXIS = 3
 STEERING_AXIS = 2
-ESP_IP = "192.168.137.89"
+#ESP_IP = TODO
 ESP_PORT = 4210
 
 # Video Capture Settings
 JOSHPI_DISPLAY_SIZE = (640, 480)
-JOSHPI_IP = "192.168.137.114"
+#JOSHPI_IP = TODO
 JOSHPI_PORT = "8554"
 
 # Autonomous Control settings
-YOLO_INPUT_SIZE = 320 #expects multiple of 32
-MODEL = "yolov8l.pt"
+YOLO_INPUT_SIZE = 640 #expects multiple of 32
+MODEL = "yolov8m.pt"
 DEVICE = "cuda"
 AUTONOMOUS_THROTTLE_SPEED = 150 # 0-255
 AUTONOMOUS_STEERING_SPEED = 50 # 0-255
-CLASS_IDS = [0] # YOLO Bottle Class
+CLASS_IDS = [0, 39, 67] # YOLO classes: person, bottle, cellphone
 TIMEOUT = 0.1
 CONFIDENCE = 0.5
 SLEEP_TIME = 0.05
