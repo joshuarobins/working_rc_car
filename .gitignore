@@ -3,4 +3,4 @@ src/__pycache__
 .vscode
 src/tests
 models/*.pt
-config.py
+src/config.py

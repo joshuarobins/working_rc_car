@@ -1,6 +1,6 @@
 import config
 import cv2
-from utils import yolo_setup, get_largest_box, annotate_frame
+from utils import yolo_setup, get_box, annotate_frame
 
 
 model, rtsp_url, frame_height, frame_width = yolo_setup()
@@ -18,7 +18,7 @@ persist=True):
 
     frame = result.orig_img
     boxes = result.boxes
-    (box, cls_id, conf, track_id) = get_largest_box(boxes)
+    box, cls_id, conf, track_id = get_box(boxes)
     annotated_frame = annotate_frame(frame, box, cls_id, conf, track_id, model)
     cv2.imshow("YOLO RTSP Stream", annotated_frame)
     if cv2.waitKey(1) & 0xFF == ord("q"):
