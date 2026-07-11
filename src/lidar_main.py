@@ -1,6 +1,7 @@
 import socket
 import json
 import config
+import math
 
 def receive_lidar():
     print(f"🔗 Connecting to Raspberry Pi at {config.JOSHPI_IP}:{config.LIDAR_PORT}...")
@@ -23,7 +24,20 @@ def receive_lidar():
             while "\n" in buffer:
                 line, buffer = buffer.split("\n", 1)
                 if line.strip():
-                    print(line) # Prints the raw JSON data string: {"a": 124.5, "d": 450.0}
+                    try:
+                        data = json.loads(line)
+
+                        angle_deg = data["angle"]
+                        distance = data["distance_mm"]
+                        angle_rad = math.radians(angle_deg)
+
+                        x = distance * math.cos(angle_rad)
+                        y = distance * math.sin(angle_rad)
+
+                        print(f"Plotting Point -> X: {x:.2f} mm, Y: {y:.2f} mm")
+                            
+                    except json.JSONDecodeError:
+                        print("Skipping malformed packet...")
                     
     except KeyboardInterrupt:
         print("\nStopping receiver.")
