@@ -20,7 +20,7 @@ persist=True):
     boxes = result.boxes
     box, cls_id, conf, track_id = get_box(boxes)
     annotated_frame = annotate_frame(frame, box, cls_id, conf, track_id, model)
-    cv2.imshow("YOLO RTSP Stream", annotated_frame)
+    cv2.imshow("YOLO Stream (q to quit)", annotated_frame)
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 

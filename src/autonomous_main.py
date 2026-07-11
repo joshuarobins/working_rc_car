@@ -1,6 +1,5 @@
 import config
 import cv2
-import time
 from utils import yolo_setup, autonomous_setup, send_motor_command, get_box, autonomous_logic, annotate_frame
 
 model, rtsp_url, frame_height, frame_width = yolo_setup()
@@ -26,7 +25,7 @@ persist=True):
     sock, box, last_detect_time, smoothed_throttle, smoothed_steering
     )
     
-    cv2.imshow("YOLO RTSP Stream", annotated_frame)
+    cv2.imshow("Autonomous Control Stream (q to quit)", annotated_frame)
     if cv2.waitKey(1) & 0xFF == ord("q"):
         send_motor_command(0, 0, do_print=False, sock=sock)
         break

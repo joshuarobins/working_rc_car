@@ -15,7 +15,7 @@ while True:
     ret, frame = cap.read()
     if not ret:
         break
-    cv2.imshow("PiCam Stream", frame)
+    cv2.imshow("Live Stream (q to quit)", frame)
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 

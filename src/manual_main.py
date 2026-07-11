@@ -3,29 +3,34 @@ import pygame
 import socket
 import time
 
-# Create UDP socket
+
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 print(f"Socket created for UDP communication to {config.ESP_IP}:{config.ESP_PORT}")
 
-# Initialize Pygame and joystick
 pygame.init()
 pygame.joystick.init()
-print("Pygame and joystick module initialized.")
 
-try:
-    joystick = pygame.joystick.Joystick(0)
-    joystick.init()
-    print(f"Joystick '{joystick.get_name()}' connected and initialized.")
-except pygame.error:
-    print("No joystick found. Exiting.")
-    exit()
+if pygame.joystick.get_count() == 0:
+    print("No joystick found", end="", flush=True)
+    while pygame.joystick.get_count() == 0:
+        pygame.event.pump()
+        time.sleep(.2)
+        print(".", end="", flush=True)
 
-# Previous values for change detection
+joystick = pygame.joystick.Joystick(0)
+joystick.init()
+print(f"Joystick '{joystick.get_name()}' connected and initialized. ")
+print("Press q to quit")
+
 prev_throttle = None
 prev_steering = None
 
 while True:
-    pygame.event.pump()
+
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+            pygame.quit()
+            exit()
 
     throttle = joystick.get_axis(config.THROTTLE_AXIS)
     steering = joystick.get_axis(config.STEERING_AXIS)
